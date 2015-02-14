@@ -7,12 +7,28 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include <time.h>
 #define ABCD 2
 
 /* define replacement */
 #define FUNCTION(name, a) int fun_##name(int x) { return (a)*x;}
 FUNCTION(quadruple, 4)
 FUNCTION(double, 2)
+/* return array from function in C*/
+int * getRandom( )
+{
+    static int  r[10];
+    int i;
+    /* set the seed */
+    srand( (unsigned)time( NULL ) );
+    for ( i = 0; i < 10; ++i)
+    {
+        r[i] = rand();
+        printf( "r[%d] = %d\n", i, r[i]);
+
+    }
+    return r;
+}
 
 /* structures */
 struct Books {
@@ -22,12 +38,62 @@ struct Books {
     int   book_id;
 } book;  
 
-/* struct as a parameter */
+/* typedef the struct Books to Type name Book */
+typedef struct Books Book;
+
+/* struct as function parameter */
 void printBook( struct Books book ){
     printf( "Book title : %s\n", book.title);
     printf( "Book author : %s\n", book.author);
     printf( "Book subject : %s\n", book.subject);
     printf( "Book book_id : %d\n", book.book_id);
+};
+
+/* struct pointer as function parameter */
+void printBookByPtr( struct Books *book ){
+    printf( "Book title : %s\n", book->title); // the same as (&book).title
+    printf( "Book author : %s\n", book->author);
+    printf( "Book subject : %s\n", book->subject);
+    printf( "Book book_id : %d\n", book->book_id);
+};
+
+/* define simple structure */
+struct
+{
+    unsigned int widthValidated;
+    unsigned int heightValidated;
+} status1; // sizeof(status1) is  8
+
+/* define a structure with bit fields */
+struct
+{
+    unsigned int widthValidated : 1;
+    unsigned int heightValidated : 1;
+} status2; // sizeof(status2) is 4
+
+/* a good example for bit-field */
+struct packed_struct {
+    unsigned int f1:1;
+    unsigned int f2:1;
+    unsigned int f3:1;
+    unsigned int f4:1;
+    unsigned int type:4;
+    unsigned int my_int:9;
+} pack;
+
+/* age for 3 fields */
+struct
+{
+  unsigned int age : 3;
+} Age;
+
+/* union allow different data types in the same memory location */
+ 
+union Data
+{
+    int i;
+    float f;
+    char  str[20];
 };
 
 /* function forms */
@@ -62,8 +128,8 @@ void find_str(char const* str, char const* substr)
 {
     char* pos = strstr(str, substr);
     if(pos) {
-        printf("-> pos address:%x\n", pos);
-        printf("-> str address:%x\n", str);
+        printf("-> pos address:%x\n", (unsigned int) pos);
+        printf("-> str address:%x\n", (unsigned int) str);
         printf("found the string '%s' in '%s' at position: %ld\n", substr, str, pos - str);
     } else {
         printf("the string '%s' was not found in '%s'\n", substr, str);
@@ -106,11 +172,11 @@ int main(int argc, char *argv[])
     /* get average */
     double balance[10] = {11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0};
     double aver_balance;
-    printf("getAverage(balance): %ld\n", getAverage(balance, 10));
+    printf("getAverage(balance): %f\n", getAverage(balance, 10));
 
     /* get average from ptr as a parameter*/
     double *balanceptr = balance;
-    printf("getAverageByPtr(balanceptr): %ld\n", getAverage(balanceptr, 10));
+    printf("getAverageByPtr(balanceptr): %f\n", getAverage(balanceptr, 10));
 
     /* structure declarations */
     struct Books Book1;        /* Declare Book1 of type Book */
@@ -143,6 +209,104 @@ int main(int argc, char *argv[])
     /* print Book information with func */
     printBook(Book1);
     printBook(Book2);
+
+    /* struct pointer should assign a address value, noted the '&' operator */
+    struct Books *struct_pointer_book1;
+    struct Books *struct_pointer_book2;
+    struct_pointer_book1 = &Book1;
+    struct_pointer_book2 = &Book2;
+    printBookByPtr(struct_pointer_book1);
+    printBookByPtr(struct_pointer_book2);
+
+    /* bit field example */
+    status1.widthValidated = 1;
+    status1.heightValidated = 1;
+    status2.widthValidated = 0;
+    status2.heightValidated = 0;
+
+    /* struct Age range from 0 to 7 (3 bits) */
+    Age.age = 0;
+    Age.age = 7;
+
+
+    /* union data manipulation */
+    union Data data;        
+    data.i = 10;
+    data.f = 220.5;
+    strcpy( data.str, "C Programming");
+
+    /* union got corrupted because final value 
+     * assigned to the variable has occupied the memory location */
+    printf( "data.i : %d\n", data.i);
+    printf( "data.f : %f\n", data.f);
+    printf( "data.str : %s\n", data.str);
+
+    /* multiple dimension array declaration */
+    int a[5][2] = { {0,0}, {1,2}, {2,4}, {3,6},{4,8}};
+    int b[3][4] = {  
+        {0, 1, 2, 3} ,   /*  initializers for row indexed by 0 */
+        {4, 5, 6, 7} ,   /*  initializers for row indexed by 1 */
+        {8, 9, 10, 11}   /*  initializers for row indexed by 2 */
+    };
+    int c[3][4] = {0,1,2,3,4,5,6,7,8,9,10,11};
+
+    /* pointer points the array returned from getRandom() */
+    int index_arr;
+    int *p;
+    p = getRandom();
+    for ( index_arr = 0; index_arr < 10; index_arr++ ) {
+        printf( "*(p + %d) : %d\n", index_arr, *(p + index_arr));
+    }
+         
+    /* pointer comparison */
+    {
+        const int MAX = 3;
+        int index = 0;
+        int *ptr;
+        int var[] = {10, 100, 200};
+        ptr = var; //the same as 'ptr = &var[0];'
+        while ( ptr <= &var[MAX - 1] )
+        {
+            printf("Address of var[%d] = %x\n", index, (unsigned int) ptr );
+            printf("Value of var[%d] = %d\n", index , *ptr );
+            /* point to the previous location */
+            ptr++;
+            index++;
+        }
+    }
+
+
+    {
+        /* array of pointer assignment */
+        int val1 = 1;
+        int val2 = 2;
+        int val3 = 3;
+        int each;
+        const int size = 3;
+        int valueArr[size];
+        int *ptrArray[size];
+        for ( each = 0; each < size; each++ ){
+            printf("assign> ptrArray[%d] = &valueArr[%d]\n",each,each);
+            ptrArray[each] = &valueArr[each];
+        }
+    }
+
+    {
+        /*input & output*/
+        //char str[100];
+        //printf( "Enter a value :");
+        //gets( str );
+        //printf( "\nYou entered: ");
+        //puts( str );
+    }
+
+    /* array of pointers */
+    char *names[] = {
+        "Zara Ali",
+        "Hina Ali",
+        "Nuha Ali",
+        "Sara Ali",
+    };
 
     /* subfunc call in main */
     subfunc();
@@ -190,20 +354,22 @@ int main(int argc, char *argv[])
     /* Raise errno with non-zero value */
     printf("MATH_ERRNO is %s\n", math_errhandling & MATH_ERRNO ? "set" : "not set");
 
+    /* you should assign expression result to a variable or cause unused value warning */
+    int ret;
     errno = 0;
-    1.0/0.0;
+    ret = 1.0/0.0;
     show_errno();
 
     errno = 0;
-    acos(+1.1);
+    ret = acos(+1.1);
     show_errno();
 
     errno = 0;
-    log(0.0);
+    ret = log(0.0);
     show_errno();
 
     errno = 0;
-    sin(0.0);
+    ret = sin(0.0);
     show_errno();
 
 
@@ -226,7 +392,7 @@ int main(int argc, char *argv[])
     printf("%s\n",strerror(errno));
 
     /* constant */
-    const int pi = 3.14;
+    const double pi = 3.14;
     const char NEWLINE = '\n';
 
 
@@ -242,8 +408,10 @@ int main(int argc, char *argv[])
     }
 
     /* apply string searching function */
-    char* str = "one two three";
-    find_str(str, "two");
+    {
+        char* str = "one two three";
+        find_str(str, "two");
+    }
 
     /* check errno */
     printf("start to checking the file /dev/zer0\n");
