@@ -8,7 +8,32 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
+#include <stdarg.h> //for va_list
 #define ABCD 2
+
+
+enum Action{stop, sit, stand, walk, run};
+
+/* va_list */ 
+double average(int num,...)
+{
+    va_list valist;
+    double sum = 0.0;
+    int i;
+
+    /* initialize valist for num number of arguments */
+    va_start(valist, num);
+
+    /* access all the arguments assigned to valist */
+    for (i = 0; i < num; i++)
+    {
+        sum += va_arg(valist, int);
+    }
+    /* clean memory reserved for valist */
+    va_end(valist);
+
+    return sum/num;
+}
 
 /* define replacement */
 #define FUNCTION(name, a) int fun_##name(int x) { return (a)*x;}
@@ -169,6 +194,32 @@ int main(int argc, char *argv[])
     printf("__STDC_VERSION__: %ld\n", __STDC_VERSION__);
     printf("__STDC_HOSTED__ : %d\n", __STDC_HOSTED__ );
 
+    /* enumeration */
+    enum Action action = stop;
+    action = stand;
+    printf("-> action is %d\n", action + 2);
+
+    /*convert enum names into string */
+#define FOREACH_FRUIT(FRUIT) \
+    FRUIT(apple)   \
+    FRUIT(orange)  \
+    FRUIT(grape)   \
+    FRUIT(banana)  \
+
+#define GENERATE_ENUM(ENUM) ENUM,
+#define GENERATE_STRING(STRING) #STRING,
+
+    enum FRUIT_ENUM {
+        FOREACH_FRUIT(GENERATE_ENUM)
+    };
+
+    static const char *FRUIT_STRING[] = {
+        FOREACH_FRUIT(GENERATE_STRING)
+    };
+
+    printf("enum apple as a string: %s\n",FRUIT_STRING[apple]);
+
+
     /* get average */
     double balance[10] = {11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0};
     double aver_balance;
@@ -311,6 +362,52 @@ int main(int argc, char *argv[])
     /* subfunc call in main */
     subfunc();
 
+    /* average with va_list*/
+    printf("Average of 2, 3, 4, 5 = %f\n", average(4, 2,3,4,5));
+    printf("Average of 5, 10, 15 = %f\n", average(3, 5,10,15));
+
+    { /* sizeof() shows length with null character,  strlen() won't */
+        const char str[] = "How many characters does this string contain?";
+        printf("without null character: %zu\n", strlen(str));
+        printf("with null character: %zu\n", sizeof(str));
+    }
+
+    {
+        char name[100];
+        strcpy(name, "Zara Ali");
+        /* allocate memory dynamically */
+        int strlen_required = strlen("Zara Ali");
+        char *description = malloc( strlen_required * sizeof(char) );
+        if( description == NULL )
+        {
+            fprintf(stderr, "Error - unable to allocate required memory\n");
+        }
+        else
+        {
+            strcpy( description, "Zara ali a DPS student in class 10th");
+        }
+        printf("Name = %s\n", name );
+        printf("Description: %s\n", description );
+
+        /* suppose you want to store bigger description */
+        description = realloc( description, 100 * sizeof(char) );
+        if( description == NULL )
+        {
+            fprintf(stderr, "Error - unable to allocate required memory\n");
+        }
+        else
+        {
+            strcat( description, "She is in class 10th");
+        }
+
+        printf("realloced Name = %s\n", name );
+        printf("realloced Description: %s\n", description );
+
+        /* release memory using free() function */
+        free(description);
+    }
+
+
 #ifdef ABCD
     printf("1: yes\n");
 #else
@@ -412,6 +509,18 @@ int main(int argc, char *argv[])
         char* str = "one two three";
         find_str(str, "two");
     }
+    /* arithmetic conversion */
+    //int 
+    //unsigned int 
+    //long 
+    //unsigned long
+    //long long 
+    //unsigned long long 
+    //float
+    //double
+    //long double
+
+
 
     /* check errno */
     printf("start to checking the file /dev/zer0\n");
